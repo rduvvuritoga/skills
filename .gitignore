@@ -4,6 +4,10 @@
 # Allowlist: this file + custom skills I own
 !.gitignore
 !README.md
+!error-modals/
+!error-modals/**
+!marketing-copy/
+!marketing-copy/**
 !resolve-pr-comments/
 !resolve-pr-comments/**
 !review-pr-comments/
