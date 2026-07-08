@@ -10,6 +10,8 @@
 !marketing-copy/**
 !frontiq-copywriting/
 !frontiq-copywriting/**
+!learn/
+!learn/**
 !resolve-pr-comments/
 !resolve-pr-comments/**
 !review-pr-comments/
