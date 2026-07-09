@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Computer Use"
+  short_description: "Use Codex CLI as a local computer-use verification agent."
+  default_prompt: "Use Codex Computer Use to verify the running app behavior and report back with screenshots or findings."
