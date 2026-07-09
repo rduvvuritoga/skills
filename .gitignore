@@ -12,6 +12,8 @@
 !codex-computer-use/**
 !frontiq-copywriting/
 !frontiq-copywriting/**
+!explain-diff/
+!explain-diff/**
 !learn/
 !learn/**
 !resolve-pr-comments/

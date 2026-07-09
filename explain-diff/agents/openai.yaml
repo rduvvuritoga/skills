@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Diff"
+  short_description: "Create rich HTML explanations of code changes"
+  default_prompt: "Use $explain-diff to explain this PR or diff as a self-contained HTML walkthrough."
