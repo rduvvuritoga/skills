@@ -1,48 +1,101 @@
 # Rduvvuri Skills
 
-Personal coding-agent skills shared through
-[`rduvvuritoga/skills`](https://github.com/rduvvuritoga/skills).
+[![skills.sh](https://skills.sh/b/rduvvuritoga/skills)](https://skills.sh/rduvvuritoga/skills)
 
-The repository is the source of truth. The skills CLI installs the published
-skills into `~/.agents/skills` and makes them available to Claude Code, Codex,
+Ravi Duvvuri's reusable coding, writing, marketing, and learning skills for
+coding agents. The repository is the source of truth; the skills CLI installs
+the published collection into `~/.agents/skills` for Claude Code, Codex,
 Cursor, GitHub Copilot, and Warp.
+
+## Install
+
+Install every published skill globally:
+
+```bash
+npx skills add rduvvuritoga/skills \
+  --global \
+  --skill '*' \
+  --agent claude-code codex cursor github-copilot warp \
+  --yes \
+  --full-depth
+```
+
+Update already-installed global skills:
+
+```bash
+npx skills update --global --yes
+```
+
+## Skills
+
+Model-invoked skills are available automatically when a request matches.
+User-invoked skills run only when explicitly selected.
+
+### Coding
+
+**Model-invoked**
+
+- [`codex-computer-use`](./skills/coding/codex-computer-use/SKILL.md) — Delegate local UI and runtime verification to Codex CLI.
+- [`explain-diff`](./skills/coding/explain-diff/SKILL.md) — Create a self-contained HTML walkthrough of a code change.
+
+**User-invoked**
+
+- [`resolve-pr-comments`](./skills/coding/resolve-pr-comments/SKILL.md) — Resolve review threads after their concerns have been addressed.
+- [`review-pr-comments`](./skills/coding/review-pr-comments/SKILL.md) — Fix, validate, push, and resolve pull-request feedback.
+- [`save-for-later`](./skills/coding/save-for-later/SKILL.md) — Preserve deferred work as a detailed GitHub issue.
+- [`setup-lanes`](./skills/coding/setup-lanes/SKILL.md) — Create stacked branches for parallel-agent feature work.
+
+### Writing and marketing
+
+**Model-invoked**
+
+- [`error-modals`](./skills/writing/error-modals/SKILL.md) — Design actionable error dialogs, messages, and recovery paths.
+- [`frontiq-copywriting`](./skills/writing/frontiq-copywriting/SKILL.md) — Write FrontIQ product and marketing copy using its writing system.
+- [`marketing-copy`](./skills/writing/marketing-copy/SKILL.md) — Diagnose and write conversion-focused marketing-site copy.
+
+### Learning
+
+**Model-invoked**
+
+- [`learn`](./skills/learning/learn/SKILL.md) — Coach a topic through structured learning modes.
 
 ## Create a skill
 
-You only need to clone this repository once. On Ravi's Mac, the existing clone
-is at:
+Clone this repository once and reuse that checkout. On Ravi's Mac, it lives at:
 
 ```text
 /Users/ravi/work/claude-skills
 ```
 
-From that checkout:
+To add a skill:
 
-1. Create a lowercase, hyphenated folder at the repository root. The folder
-   must contain a `SKILL.md` with `name` and `description` frontmatter.
-2. Add only the scripts, references, or assets the skill actually needs.
-3. Add the new folder to the `skills` array in
-   `.claude-plugin/plugin.json`. This keeps it grouped under **Rduvvuri
-   Skills** in the skills CLI.
-4. Validate the package without installing it:
+1. Choose `skills/coding/`, `skills/writing/`, or `skills/learning/`.
+2. Create a lowercase, hyphenated skill folder containing `SKILL.md` and
+   `agents/openai.yaml`. Its name must be unique across every category because
+   all skills install into the flat `~/.agents/skills/<skill-name>` namespace.
+   Ask a coding agent to use `skill-creator` when scaffolding it.
+3. Decide whether the skill is model-invoked or user-invoked. User-invoked
+   skills must set `disable-model-invocation: true` in `SKILL.md` and
+   `policy.allow_implicit_invocation: false` in `agents/openai.yaml`.
+4. Add the folder to `.claude-plugin/plugin.json` and add its catalog entry
+   above.
+5. Validate everything:
 
    ```bash
-   npx skills add . --list --full-depth
+   ./check-skills
    ```
 
-5. Commit the finished skill, then publish it:
+6. Commit the finished change, then publish it:
 
    ```bash
-   git add <skill-name> .claude-plugin/plugin.json
+   git add .
    git commit -m "feat: add <skill-name> skill"
    ./publish-skills
    ```
 
-`publish-skills` pushes `main` and immediately installs the latest published
-collection globally. There is no separate build step.
-
-When creating a skill with a coding agent, ask it to use the `skill-creator`
-skill so the new skill is scaffolded and validated consistently.
+`publish-skills` validates the collection, pushes `main`, and immediately
+installs the latest published revision globally. Skills have no separate build
+step.
 
 ## Work from another computer
 
@@ -53,12 +106,12 @@ git clone https://github.com/rduvvuritoga/skills.git
 cd skills
 ```
 
-Create, validate, commit, and push the skill normally. Ravi's Mac checks the
-GitHub repository hourly and installs a newer `main` automatically.
+Create, validate, commit, and push normally. Ravi's Mac checks GitHub hourly
+and installs a newer `main` automatically.
 
-## Update installed skills
+## Sync this computer
 
-Install the latest published version immediately:
+Install the latest published revision immediately:
 
 ```bash
 ./sync-skills
@@ -70,3 +123,6 @@ Force a reinstall even when the recorded revision is unchanged:
 ./sync-skills --force
 ```
 
+## License
+
+[MIT](./LICENSE)

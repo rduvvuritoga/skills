@@ -1,0 +1,6 @@
+interface:
+  display_name: "Save for Later"
+  short_description: "Capture deferred work as a GitHub issue"
+  default_prompt: "Use $save-for-later to preserve this plan as a detailed GitHub issue."
+policy:
+  allow_implicit_invocation: false

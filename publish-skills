@@ -11,5 +11,6 @@ if [[ "$BRANCH" != "main" ]]; then
   exit 1
 fi
 
+"$ROOT/check-skills"
 git -C "$ROOT" push "$@"
 exec "$ROOT/sync-skills" --force

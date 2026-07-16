@@ -1,0 +1,6 @@
+interface:
+  display_name: "Setup Lanes"
+  short_description: "Create branches for parallel agent lanes"
+  default_prompt: "Use $setup-lanes to prepare parallel branches for this feature."
+policy:
+  allow_implicit_invocation: false

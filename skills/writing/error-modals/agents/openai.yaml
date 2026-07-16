@@ -1,0 +1,4 @@
+interface:
+  display_name: "Error Modals"
+  short_description: "Design clear, actionable error experiences"
+  default_prompt: "Use $error-modals to improve this error dialog and its recovery actions."

@@ -1,0 +1,130 @@
+#!/usr/bin/env node
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.dirname(fileURLToPath(import.meta.url));
+const errors = [];
+
+function fail(message) {
+  errors.push(message);
+}
+
+function walk(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(directory, entry.name);
+    return entry.isDirectory() ? walk(fullPath) : [fullPath];
+  });
+}
+
+const manifestPath = path.join(root, ".claude-plugin", "plugin.json");
+const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
+
+if (!/^\d+\.\d+\.\d+$/.test(manifest.version ?? "")) {
+  fail(".claude-plugin/plugin.json must contain a semantic version.");
+}
+
+const skillFiles = walk(path.join(root, "skills"))
+  .filter((file) => path.basename(file) === "SKILL.md")
+  .sort();
+const skillDirectories = skillFiles.map((file) => path.dirname(file));
+const skillNames = skillDirectories.map((directory) => path.basename(directory));
+const discoveredPaths = skillDirectories.map((directory) =>
+  path.relative(root, directory).split(path.sep).join("/"),
+);
+
+if (new Set(skillNames).size !== skillNames.length) {
+  const duplicates = [...new Set(skillNames.filter(
+    (name, index) => skillNames.indexOf(name) !== index,
+  ))];
+  fail(`Skill names must be globally unique: ${duplicates.join(", ")}.`);
+}
+const manifestPaths = (manifest.skills ?? [])
+  .map((entry) => entry.replace(/^\.\//, ""))
+  .sort();
+
+if (JSON.stringify(discoveredPaths) !== JSON.stringify(manifestPaths)) {
+  fail(
+    "The plugin skills array must exactly match the skill folders under skills/.",
+  );
+}
+
+for (const [index, current] of (manifest.skills ?? []).entries()) {
+  if (index > 0 && manifest.skills[index - 1].localeCompare(current) > 0) {
+    fail("The plugin skills array must remain sorted by path.");
+    break;
+  }
+}
+
+for (const skillFile of skillFiles) {
+  const directory = path.dirname(skillFile);
+  const folderName = path.basename(directory);
+  const relativeSkillFile = path
+    .relative(root, skillFile)
+    .split(path.sep)
+    .join("/");
+  const skill = fs.readFileSync(skillFile, "utf8");
+  const frontmatter = skill.match(/^---\n([\s\S]*?)\n---/);
+
+  if (!frontmatter) {
+    fail(`${relativeSkillFile}: missing YAML frontmatter.`);
+    continue;
+  }
+
+  const name = frontmatter[1].match(/^name:\s*([^\n]+)$/m)?.[1]?.trim();
+  if (name !== folderName) {
+    fail(`${relativeSkillFile}: name must match folder ${folderName}.`);
+  }
+  if (!/^description:\s*(?:\S.*|[>|][-+]?\s*)$/m.test(frontmatter[1])) {
+    fail(`${relativeSkillFile}: missing description.`);
+  }
+
+  const metadataPath = path.join(directory, "agents", "openai.yaml");
+  if (!fs.existsSync(metadataPath)) {
+    fail(`${relativeSkillFile}: missing agents/openai.yaml.`);
+    continue;
+  }
+
+  const metadata = fs.readFileSync(metadataPath, "utf8");
+  const displayName = metadata.match(/^\s{2}display_name:\s*"([^"]+)"\s*$/m)?.[1];
+  const shortDescription = metadata.match(
+    /^\s{2}short_description:\s*"([^"]+)"\s*$/m,
+  )?.[1];
+  const defaultPrompt = metadata.match(
+    /^\s{2}default_prompt:\s*"([^"]+)"\s*$/m,
+  )?.[1];
+
+  if (!displayName) fail(`${relativeSkillFile}: missing display_name.`);
+  if (!shortDescription) {
+    fail(`${relativeSkillFile}: missing short_description.`);
+  } else if (shortDescription.length < 25 || shortDescription.length > 64) {
+    fail(`${relativeSkillFile}: short_description must be 25-64 characters.`);
+  }
+  if (!defaultPrompt?.includes(`$${folderName}`)) {
+    fail(`${relativeSkillFile}: default_prompt must mention $${folderName}.`);
+  }
+
+  const userInvoked = /^disable-model-invocation:\s*true\s*$/m.test(
+    frontmatter[1],
+  );
+  const implicitDisabled = /^\s{2}allow_implicit_invocation:\s*false\s*$/m.test(
+    metadata,
+  );
+  if (userInvoked !== implicitDisabled) {
+    fail(`${relativeSkillFile}: Claude and Codex invocation policies disagree.`);
+  }
+
+  if (!readme.includes(`](./${relativeSkillFile})`)) {
+    fail(`${relativeSkillFile}: missing linked README catalog entry.`);
+  }
+}
+
+if (errors.length > 0) {
+  console.error("Skill validation failed:\n");
+  for (const error of errors) console.error(`- ${error}`);
+  process.exit(1);
+}
+
+console.log(`Validated ${skillFiles.length} skills in ${manifest.name}.`);

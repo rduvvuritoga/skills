@@ -1,0 +1,6 @@
+interface:
+  display_name: "Resolve PR Comments"
+  short_description: "Resolve addressed GitHub review threads"
+  default_prompt: "Use $resolve-pr-comments to close the review threads that have already been addressed."
+policy:
+  allow_implicit_invocation: false

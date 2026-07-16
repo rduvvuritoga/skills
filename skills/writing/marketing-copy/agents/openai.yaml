@@ -1,0 +1,4 @@
+interface:
+  display_name: "Marketing Copy"
+  short_description: "Write conversion-focused marketing-site copy"
+  default_prompt: "Use $marketing-copy to rewrite this landing page for clarity and conversion."
