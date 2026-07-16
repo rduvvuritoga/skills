@@ -139,7 +139,7 @@ Walk through the first one step by step. Then let the user try the next four the
 ```text
 /learn 80-20 Better Auth migration
 /learn ladder Twilio Media Streams vs SIP
-/learn scenarios selling FrontIQ to home service businesses
-/learn bridge ServiceTitan -> FrontIQ positioning
+/learn scenarios selling an AI receptionist to home service businesses
+/learn bridge field-service software -> AI automation positioning
 /learn test AI agent architecture
 ```

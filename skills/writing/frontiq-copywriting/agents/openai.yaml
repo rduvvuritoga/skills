@@ -1,4 +1,0 @@
-interface:
-  display_name: "FrontIQ Copywriting"
-  short_description: "Write FrontIQ copy that explains the work"
-  default_prompt: "Use $frontiq-copywriting to rewrite this FrontIQ page copy around problem, workflow, and outcome."

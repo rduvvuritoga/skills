@@ -38,9 +38,8 @@ Detailed implementation steps with affected files.
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
-4. Add the issue to the **Front IQ MVP** project (project number 4, owner togasoftware) unless the user specifies otherwise:
-   ```
-   gh project item-add 4 --owner togasoftware --url <issue-url>
-   ```
+4. If the user or repository instructions name a GitHub Project, add the issue
+   to that project. Otherwise, leave it as a normal repository issue; do not
+   guess an organization, project number, or board.
 
 5. Return the issue URL to the user.

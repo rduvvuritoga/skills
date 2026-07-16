@@ -36,6 +36,7 @@ User-invoked skills run only when explicitly selected.
 **Model-invoked**
 
 - [`codex-computer-use`](./skills/coding/codex-computer-use/SKILL.md) — Delegate local UI and runtime verification to Codex CLI.
+- [`error-modals`](./skills/coding/error-modals/SKILL.md) — Design and implement actionable error dialogs, messages, and recovery paths.
 - [`explain-diff`](./skills/coding/explain-diff/SKILL.md) — Create a self-contained HTML walkthrough of a code change.
 
 **User-invoked**
@@ -49,8 +50,6 @@ User-invoked skills run only when explicitly selected.
 
 **Model-invoked**
 
-- [`error-modals`](./skills/writing/error-modals/SKILL.md) — Design actionable error dialogs, messages, and recovery paths.
-- [`frontiq-copywriting`](./skills/writing/frontiq-copywriting/SKILL.md) — Write FrontIQ product and marketing copy using its writing system.
 - [`marketing-copy`](./skills/writing/marketing-copy/SKILL.md) — Diagnose and write conversion-focused marketing-site copy.
 
 ### Learning
