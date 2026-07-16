@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+BRANCH=$(git -C "$ROOT" branch --show-current)
+
+if [[ "$BRANCH" != "main" ]]; then
+  echo "publish-skills installs from GitHub main; current branch is ${BRANCH}." >&2
+  echo "Merge or switch to main before publishing." >&2
+  exit 1
+fi
+
+git -C "$ROOT" push "$@"
+exec "$ROOT/sync-skills" --force

@@ -4,6 +4,8 @@
 # Allowlist: this file + custom skills I own
 !.gitignore
 !README.md
+!publish-skills
+!sync-skills
 !error-modals/
 !error-modals/**
 !marketing-copy/

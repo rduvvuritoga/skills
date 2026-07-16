@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO="rduvvuritoga/skills"
+REMOTE_URL="https://github.com/${REPO}.git"
+STATE_FILE="${HOME}/.agents/.rduvvuritoga-skills-main.sha"
+FORCE=0
+
+if [[ "${1:-}" == "--force" ]]; then
+  FORCE=1
+elif [[ $# -gt 0 ]]; then
+  echo "Usage: ./sync-skills [--force]" >&2
+  exit 2
+fi
+
+REMOTE_SHA=$(git ls-remote "$REMOTE_URL" refs/heads/main | awk '{print $1}')
+if [[ -z "$REMOTE_SHA" ]]; then
+  echo "Could not resolve ${REPO} main." >&2
+  exit 1
+fi
+
+INSTALLED_SHA=""
+if [[ -f "$STATE_FILE" ]]; then
+  INSTALLED_SHA=$(<"$STATE_FILE")
+fi
+
+if [[ "$FORCE" -eq 0 && "$INSTALLED_SHA" == "$REMOTE_SHA" ]]; then
+  echo "Skills are already current at ${REMOTE_SHA}."
+  exit 0
+fi
+
+npx --yes skills add "$REPO" \
+  --global \
+  --skill '*' \
+  --agent claude-code codex cursor github-copilot warp \
+  --yes \
+  --full-depth
+
+mkdir -p "$(dirname "$STATE_FILE")"
+printf '%s\n' "$REMOTE_SHA" > "$STATE_FILE"
+echo "Installed ${REPO} at ${REMOTE_SHA}."
