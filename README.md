@@ -63,7 +63,7 @@ User-invoked skills run only when explicitly selected.
 Clone this repository once and reuse that checkout. On Ravi's Mac, it lives at:
 
 ```text
-/Users/ravi/work/claude-skills
+/Users/ravi/work/skills
 ```
 
 To add a skill:
