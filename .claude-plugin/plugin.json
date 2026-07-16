@@ -1,0 +1,21 @@
+{
+  "name": "rduvvuri-skills",
+  "version": "1.0.0",
+  "description": "Rduvvuri's reusable coding-agent skills.",
+  "author": {
+    "name": "Ravi Duvvuri"
+  },
+  "repository": "https://github.com/rduvvuritoga/skills",
+  "skills": [
+    "./codex-computer-use",
+    "./error-modals",
+    "./explain-diff",
+    "./frontiq-copywriting",
+    "./learn",
+    "./marketing-copy",
+    "./resolve-pr-comments",
+    "./review-pr-comments",
+    "./save-for-later",
+    "./setup-lanes"
+  ]
+}

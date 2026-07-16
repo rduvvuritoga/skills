@@ -6,6 +6,8 @@
 !README.md
 !publish-skills
 !sync-skills
+!.claude-plugin/
+!.claude-plugin/**
 !error-modals/
 !error-modals/**
 !marketing-copy/
