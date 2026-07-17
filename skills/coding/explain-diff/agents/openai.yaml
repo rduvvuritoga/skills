@@ -1,4 +1,4 @@
 interface:
   display_name: "Explain Diff"
-  short_description: "Create rich HTML explanations of code changes"
-  default_prompt: "Use $explain-diff to explain this PR or diff as a self-contained HTML walkthrough."
+  short_description: "Create and publish HTML code walkthroughs"
+  default_prompt: "Use $explain-diff to explain this PR or diff as a self-contained HTML walkthrough, keep it local while work is open, and publish it when complete."

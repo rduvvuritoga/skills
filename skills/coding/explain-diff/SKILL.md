@@ -1,6 +1,6 @@
 ---
 name: explain-diff
-description: Create a rich, self-contained HTML explanation of a code change, diff, commit range, branch, pull request, or reviewable patch. Use when the user asks to explain what changed, teach a PR, summarize a diff for onboarding, create an interactive walkthrough of code changes, or produce a durable HTML artifact with background, intuition, code walkthrough, diagrams, and quiz questions.
+description: Create and manage a rich, self-contained HTML explanation of a code change, diff, commit range, branch, pull request, or reviewable patch. Use when the user asks to explain what changed, teach a PR, summarize a diff for onboarding, create an interactive walkthrough, produce a durable HTML artifact, or generate the post-commit explainer required by the implementation workflow.
 ---
 
 # Explain Diff
@@ -15,9 +15,10 @@ Create a dated HTML explainer that teaches a code change from first principles, 
 2. Inspect the diff and surrounding code. Read enough adjacent modules, tests, docs, and call sites to explain the existing system honestly.
 3. If a PR head file is missing or stale in the local checkout, read the PR diff or head-file content through the available GitHub/API/fetch path and note that limitation in the output.
 4. Build the explanation around four sections: `Background`, `Intuition`, `Code`, and `Quiz`.
-5. Write a single self-contained `.html` file in a global temp location outside the repo, normally `/tmp/YYYY-MM-DD-explanation-<slug>.html`.
+5. Write a single self-contained `.html` file under the repository root at `.scratch/explain-diff/YYYY-MM-DD-<slug>/index.html`. Resolve the repository exclude file with `git rev-parse --git-path info/exclude` and add `.scratch/` when needed so the local artifact never enters the change being explained.
 6. Verify the HTML source before returning: no external runtime dependencies, code blocks preserve whitespace, and quiz interactions work with embedded JavaScript.
-7. Return the output path and a concise note on what change was explained.
+7. Apply the lifecycle in [Cloudflare publication](references/cloudflare-publication.md).
+8. Return the local path or published URL and a concise note on what change was explained.
 
 ## Content Structure
 
@@ -75,18 +76,17 @@ Write in clear, narrative technical prose. Keep transitions smooth, define unfam
 
 Avoid shallow PR-summary language such as "this updates X" without explaining why X matters. Prefer explanations that move from system behavior to design pressure to code mechanics.
 
-## File Naming
+## Artifact Lifecycle
 
-Save outside the repo so the artifact does not enter version control.
+Keep the artifact local while its pull request is open. Never commit the artifact or include it in the diff it explains.
 
-Use this pattern:
+- Keep open pull requests and unfinished diffs local.
+- Schedule a durable follow-up for an open pull request; publish only after it is merged.
+- Do not publish a closed-unmerged pull request unless the user explicitly identifies it as the finished result.
+- Publish the final commit of a completed no-PR implementation immediately.
 
-```text
-/tmp/YYYY-MM-DD-explanation-<short-slug>.html
-```
-
-Use the current local date for `YYYY-MM-DD`. Keep the slug short and filesystem-safe, such as `auth-flow`, `billing-pr`, or `cache-invalidation`.
+Read [Cloudflare publication](references/cloudflare-publication.md) for state detection, deferred automation, deployment naming, security checks, and cleanup.
 
 ## Final Response
 
-Return the path to the generated HTML file. Mention the source change explained and any limitations, such as files that could not be read or tests that were not run.
+Return the `.scratch` path while work is open, or the verified Cloudflare URL after publication. Mention the source change explained, its pull-request state when applicable, and any limitations such as unavailable scheduling, missing Cloudflare configuration, unreadable files, or tests that were not run.
