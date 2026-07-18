@@ -3,7 +3,7 @@ name: learn
 description: Coach a topic through one selected structured learning mode.
 user-invocable: true
 disable-model-invocation: true
-argument-hint: [mode] [topic]
+argument-hint: "[mode] [topic]"
 ---
 
 # Learn
