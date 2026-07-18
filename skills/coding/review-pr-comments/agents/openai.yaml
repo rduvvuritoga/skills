@@ -1,6 +1,4 @@
 interface:
   display_name: "Review PR Comments"
-  short_description: "Address and resolve GitHub PR feedback"
-  default_prompt: "Use $review-pr-comments to address all actionable feedback on the current pull request."
-policy:
-  allow_implicit_invocation: false
+  short_description: "Address or resolve GitHub PR feedback"
+  default_prompt: "Use $review-pr-comments to address or close out the review threads on the current pull request."

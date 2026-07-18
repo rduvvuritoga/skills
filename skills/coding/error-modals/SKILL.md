@@ -1,226 +1,70 @@
 ---
 name: error-modals
-description: >
-  Generate well-designed error modals, dialogs, and error messages for web and mobile UIs.
-  Use this skill whenever the user asks to build, design, write copy for, or improve an error
-  modal, error dialog, error toast, error state, or error message — including form validation
-  errors, server errors, network errors, permission errors, and empty states. Also trigger when
-  the user says "something went wrong" screen, error handling UI, or wants to audit/rewrite
-  existing error copy. Even if the user just says "add an error modal", use this skill — it
-  encodes the full framework for what makes error UX good vs. bad.
+description: Design and implement actionable error experiences for web and mobile. Use when writing or auditing error copy, choosing a modal versus inline, toast, or page treatment, defining recovery actions, or building UI for validation, network, permission, payment, destructive, or data-loss failures.
 ---
 
-# Error Modals Skill
+# Error Experiences
 
-Generate error modals that are empathetic, actionable, and honest — not generic, jargon-filled,
-or blame-shifting.
+Turn a failure into a clear explanation, an honest statement of impact, and the safest useful next action.
 
-## The Framework: What Makes an Error Message Good or Bad
+## Workflow
 
-### ❌ Bad error messages have these traits
+### 1. Choose the right surface
 
-| Trait | Example | Why it's bad |
-|---|---|---|
-| **Generic** | "Something went wrong." | Tells the user nothing; forces them to guess |
-| **Technical jargon** | "Your credentials were denied." / "Failed to fetch." | Users don't care about internals; they want to know what to do |
-| **Blame-shifting** | "You didn't fill in the required fields correctly." | Shames the user; even if true, focus on the fix, not the fault |
-| **Third-party blame** | "Stripe isn't responding right now." | Looks unprofessional; user came to YOU, not Stripe |
-| **Wrong tone** | "Oops! 😬 Something broke lol" | Cutesy is inappropriate when stakes are high (income, data loss) |
-| **No path forward** | Error with no button, no link, no next step | Leaves the user stranded |
+Match the interruption to the failure:
 
-### ✅ Good error messages do these five things
+- **Inline validation** — a specific field can be corrected in place.
+- **Inline or page error** — content failed to load or a persistent problem belongs near the affected area.
+- **Toast or banner** — a non-blocking action failed and the user can continue elsewhere.
+- **Modal or dialog** — the user must acknowledge impact, choose a recovery path, or confirm a consequential action before continuing.
 
-1. **Say what happened and why** — Be specific. If you know the cause, say it. If it's a
-   technical issue on your end, own it ("due to an issue on our end").
+Use a modal only when blocking the current flow is warranted. Treat an ordinary empty state as its own product state unless a failure caused the missing content.
 
-2. **Provide reassurance** — Tell them what was *not* affected. "Your draft was saved."
-   "No charges were made." This is often the most calming thing you can write.
+### 2. Establish the facts
 
-3. **Be empathetic, not performatively apologetic** — Use "please" sparingly, in genuinely
-   dire situations. Don't over-apologize; it reads as hollow. Do acknowledge it matters.
+Determine:
 
-4. **Help them fix it** — Give a clear, specific action. If the fix is complex, link to a
-   KB article with a descriptive label like "Learn how to resolve this" — not just "Help".
+- What action failed or consequence is about to occur.
+- Whether the cause is known and safe to explain.
+- What data, money, access, or progress was affected.
+- What was definitely preserved or left unchanged.
+- Which recovery actions actually work.
+- How the user can get help when self-service recovery is unavailable.
+- The severity: low, medium, high, or critical.
 
-5. **Always give a way out** — If they can't fix it themselves, provide a path to customer
-   support. Never leave the user with no recourse.
+Use only verified facts. Omit an unknown cause or preservation claim instead of inventing reassurance.
 
----
+### 3. Write the message
 
-## Tone Calibration by Severity
+Build the message in this order:
 
-| Severity | Situation | Tone |
-|---|---|---|
-| **Low** | Form validation, minor input error | Neutral, matter-of-fact, quick fix |
-| **Medium** | Feature unavailable, timeout, retry needed | Calm, helpful, solution-focused |
-| **High** | Data loss risk, payment failure, publish failed | Serious, empathetic, reassuring |
-| **Critical** | Account locked, irreversible action, data deleted | Grave, no humor, full ownership |
+1. **Title** — name the failed action or concrete consequence in roughly 5–8 words.
+2. **Body** — explain the known cause, impact, and preserved state in 1–3 short sentences.
+3. **Primary action** — offer the safest direct recovery or confirmation action.
+4. **Secondary action** — provide a safe escape when one exists.
+5. **Support path** — include it when the user cannot recover independently.
 
-At medium and above: never use humor, exclamation points, or casual slang.
+Calibrate tone to stakes: neutral for correctable input, calm for retries, serious for payment or data risk, and grave for irreversible loss. Acknowledge impact without blaming the user or exposing irrelevant vendor and implementation details.
 
----
+For common copy structures, severity guidance, and before/after examples, read [error patterns](references/error-patterns.md).
 
-## Modal Anatomy
+### 4. Implement the selected behavior
 
-A complete error modal has these slots:
+Follow the project's existing design system, accessibility conventions, and error-state primitives. Preserve focus, keyboard navigation, screen-reader naming, loading/disabled states, and retry idempotency.
 
-```
-┌─────────────────────────────────────────┐
-│  [Icon]  Title (what happened, 5-8 words)│
-│                                          │
-│  Body: why it happened + reassurance     │
-│  (2–3 sentences max)                     │
-│                                          │
-│  [Secondary CTA]    [Primary CTA]        │
-└─────────────────────────────────────────┘
-```
+When the project uses React with shadcn/ui and needs a dialog implementation, read [the shadcn dialog reference](references/shadcn-dialog.md). Adapt it to the verified actions and existing component API rather than copying it blindly.
 
-**Title**: Name the problem, not the symptom. "Couldn't save your changes" > "Error"  
-**Body**: What happened → why (if known) → what was preserved → what to do next  
-**Primary CTA**: The fix action. "Try Again", "Retry", "Contact Support"  
-**Secondary CTA**: The escape hatch. "Cancel", "Dismiss", "Go Back"  
-**Never**: An OK button with no action context, or a single "Close" with no explanation
+### 5. Verify the complete experience
 
----
+Confirm every applicable condition:
 
-## Copy Templates by Error Type
+- The chosen surface matches how blocking and severe the failure is.
+- The title names the action or consequence rather than a generic error.
+- The body distinguishes verified cause, impact, and preserved state.
+- Every displayed action works and its label describes the result.
+- A user who cannot self-recover has a support path.
+- Tone matches severity and avoids blame, jargon, and false reassurance.
+- Destructive actions state scope and irreversibility before confirmation.
+- Implemented UI meets the project's accessibility and interaction conventions.
 
-### Network / Server Error
-```
-Title:    We couldn't complete that action
-Body:     There was an issue on our end while [attempting to X]. Your [data/work] 
-          hasn't been affected. Please try again — if the problem continues, 
-          [contact our support team →].
-CTA:      Try Again | Dismiss
-```
-
-### Form / Validation Error (inline, not modal — but if modal is required)
-```
-Title:    A few things need your attention
-Body:     [Field name] is missing [or: doesn't look right]. 
-          Check the highlighted fields below and try again.
-CTA:      Review Fields | Cancel
-```
-
-### Payment / Billing Failure
-```
-Title:    We couldn't process your payment
-Body:     Your card ending in [XXXX] was declined. No charge was made. 
-          Please check your card details or try a different payment method.
-CTA:      Update Payment | Contact Support
-```
-
-### Permission / Access Denied
-```
-Title:    You don't have access to this
-Body:     This [feature/page/file] is only available to [admins / Pro plan members].
-          [Upgrade your plan →] or ask your account admin for access.
-CTA:      Upgrade Plan | Go Back
-```
-
-### Data Loss Warning (confirmation modal)
-```
-Title:    Unsaved changes will be lost
-Body:     If you leave now, the changes you made to [item name] won't be saved.
-          This can't be undone.
-CTA:      Leave Without Saving | Keep Editing
-```
-
-### Destructive Action Confirmation
-```
-Title:    Delete [item name]?
-Body:     This will permanently delete [item name] and all its associated [data].
-          This action cannot be undone.
-CTA:      Delete Permanently | Cancel
-```
-
----
-
-## React Component (shadcn/ui + Tailwind)
-
-When generating an error modal as code, use this structure as the base:
-
-```jsx
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
-
-export function ErrorModal({
-  open,
-  onClose,
-  onRetry,
-  title = "Something went wrong",
-  description,
-  primaryAction = "Try Again",
-  secondaryAction = "Dismiss",
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
-            <DialogTitle>{title}</DialogTitle>
-          </div>
-          <DialogDescription className="pt-1 pl-8">
-            {description}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={onClose}>
-            {secondaryAction}
-          </Button>
-          {onRetry && (
-            <Button variant="destructive" onClick={onRetry}>
-              {primaryAction}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-```
-
-Adapt `variant` on the primary button:
-- Network/server errors → `default` (blue)
-- Destructive confirmations → `destructive` (red)
-- Warnings → `default` with yellow icon (`AlertTriangle`)
-
----
-
-## Checklist Before Finalizing
-
-Before presenting any error modal copy or component, verify:
-
-- [ ] Title says *what* happened, not just "Error" or "Oops"
-- [ ] Body explains *why* (or acknowledges "an issue on our end" if unknown)
-- [ ] Reassurance line included if any data/work could be at risk
-- [ ] No technical jargon (no "fetch failed", "403", "null reference")
-- [ ] No blame on user or third parties
-- [ ] Tone matches severity — no humor or casual language for medium/high
-- [ ] Primary CTA is a specific action, not just "OK"
-- [ ] Secondary CTA / escape hatch is present
-- [ ] Support path offered if user cannot self-serve
-
----
-
-## Anti-Pattern Rewrites
-
-Use these as reference when auditing existing error messages:
-
-| Before | After |
-|---|---|
-| "Something went wrong." | "We couldn't save your changes due to an issue on our end." |
-| "Error 403: Unauthorized" | "You don't have permission to view this page." |
-| "Oops! Your request failed 😬" | "We couldn't complete your request. Please try again." |
-| "Stripe isn't responding right now." | "We're having trouble connecting to our payment provider." |
-| "You didn't enter a valid email." | "This email address doesn't look right — check it and try again." |
-| "An unexpected error occurred." | "Something went wrong on our end. Your work has been saved." |
+Revise until each applicable condition passes. Report any missing product fact or recovery behavior that prevents an honest final message.

@@ -1,86 +1,49 @@
 ---
 name: codex-computer-use
-description: Ask Codex CLI, usually with gpt-5.5, to run local app verification that needs computer use, browser automation, simulators, screenshots, app launching, or independent runtime inspection. Use when Claude should have Codex test a flow, verify UI behavior, inspect a running app, capture screenshots, exercise a browser or simulator, reproduce visual bugs, or report independent confirmation and feedback about implemented behavior.
+description: Delegate independent local UI and runtime verification to Codex CLI. Use when a task requires real browser, simulator, device, or app interaction, screenshots, visual reproduction, app launching, or a second agent's evidence from a running system.
 ---
 
 # Codex Computer Use
 
-Use Codex as a separate local verification agent when the task needs real UI interaction, screenshots, simulator/browser/device state, app launching, or an independent runtime check outside Claude's current context.
-
-Do not use this for ordinary code reading, typechecking, linting, or tests Claude can run directly. Launching apps, browsers, or simulators to verify the requested work is fine without asking; ask first only if the run could disrupt the user's environment beyond that, such as closing their apps, changing system settings, sending messages, making purchases, or acting on real accounts or data.
+Use Codex CLI as a separate verification agent when the answer depends on interacting with a running system rather than reading code alone.
 
 ## Workflow
 
-1. Identify the exact verification question.
-2. Make sure the app or server state Codex needs is available, or include startup instructions in the prompt.
-3. Run Codex CLI from the relevant project directory with a narrow prompt.
-4. Ask Codex to use browser/computer-use tools as needed, collect evidence, and avoid unrelated code edits.
-5. Read Codex's final report and relay the result to the user with any important screenshots, findings, or reproduction steps.
+### 1. Define the verification contract
 
-Prefer a read-only verification prompt unless the user explicitly asked Codex to fix something. If Codex finds a bug, have it report the issue and the evidence rather than patching by default.
+Write one observable question and its pass condition. Identify the relevant project path, startup command or URL, test data, viewport or device, and evidence needed. The contract is ready when another agent can distinguish pass, fail, and blocked without guessing.
 
-## Command Pattern
+### 2. Prepare the test state
 
-Use `codex exec` non-interactively. Pass the prompt on stdin for anything longer than one sentence.
+Confirm the app, server, simulator, or browser state exists or include exact startup instructions. Prefer local, test, or disposable data. Preserve the user's existing app and browser state unless the task explicitly authorizes changing it.
+
+### 3. Choose the narrowest execution boundary
+
+Use `read-only` for inspection that produces no local artifact. Use `workspace-write` when Codex must save screenshots, logs, or other evidence in the project. Use the configured default model unless the user or repository requires a specific one.
 
 ```bash
-codex exec --model gpt-5.5 --cd "$PWD" --sandbox workspace-write --ask-for-approval on-request -
+codex exec --cd "$PWD" --sandbox read-only -
 ```
 
-If `gpt-5.5` is unavailable, use the strongest available Codex model and say that you did so. Use `--cd <project-path>` for the app under test. Use `--sandbox read-only` for pure inspection. Use `workspace-write` only when Codex may need to create temporary screenshots, logs, or small artifacts in the repo.
+The locally supported command contract is `codex exec --cd <project> --sandbox <read-only|workspace-write> -`; read the prompt from stdin. Check `codex exec --help` when flags may have changed.
 
-Do not use `--dangerously-bypass-approvals-and-sandbox` unless the user explicitly approved that exact risk for this run.
+The bypass flag is reserved for an externally sandboxed environment and requires explicit authorization for that run.
 
-## Prompt Template
+### 4. Run a narrow verification prompt
 
-Use this structure:
+Read [the prompt template](references/verification-prompt.md), fill every applicable field, and run Codex from the project under test. Request interaction with the real running flow, evidence, and a read-only report unless the user explicitly requested a fix.
 
-```text
-You are a local verification agent. Use computer-use, browser automation, app launching, screenshots, and runtime inspection as needed.
+### 5. Check the returned evidence
 
-Goal:
-[one sentence describing what to verify]
+Accept the report only when:
 
-Context:
-- Project path: [path]
-- App/server command or current URL: [command or URL]
-- Relevant user request: [brief request]
-- Areas to avoid changing: [files/accounts/settings, if any]
+- It states `pass`, `fail`, or `blocked` against the original question.
+- It describes the actual interaction performed.
+- It includes the evidence that determines the result: screenshot path, visible state, URL, log, console error, selector, or exact reproduction steps.
+- A blocked result names the missing state, permission, or command.
 
-Instructions:
-- Verify behavior by interacting with the real running app, not just reading code.
-- Capture screenshots or describe visual state when useful.
-- Do not make code changes unless explicitly asked.
-- Do not act on real accounts, send messages, make purchases, delete data, or change system settings.
-- If something cannot be verified, say exactly what blocked verification.
+Relay the result and decisive evidence rather than the full transcript. Treat a code-only inference as incomplete when the contract required runtime interaction.
 
-Report:
-- Result: pass/fail/blocked
-- Evidence: screenshots, observed UI state, logs, URLs, or exact reproduction steps
-- Findings: bugs, mismatches, or risks
-- Recommended next action
-```
+## Safety boundary
 
-## Good Uses
-
-- "Open the app and verify the signup flow works on mobile."
-- "Use the browser to reproduce this modal overlap and screenshot it."
-- "Launch the iOS simulator and confirm the onboarding screen renders."
-- "Check whether the fixed dashboard chart is actually visible at `/reports`."
-- "Act as a second agent and verify my UI change without relying on my description."
-
-## Safety Boundaries
-
-Ask the user before delegating if verification would require:
-
-- Using real customer, financial, medical, legal, or production account data.
-- Sending external messages, emails, Slack posts, texts, or form submissions.
-- Making purchases, bookings, payments, trades, or irreversible account changes.
-- Closing or modifying the user's open apps, browser profiles, system settings, or files outside the project.
-- Running destructive commands or broad cleanup.
-
-If verification only opens a local app/browser/simulator, captures screenshots, clicks through local or test data, or reads local logs, proceed.
-
-## Output Back To User
-
-Summarize Codex's result, not the entire transcript. Include the evidence that changes the answer: screenshot paths, exact visual observations, reproduction steps, failing selectors, console errors, or logs. If Codex was blocked, state the concrete blocker and the next command or permission needed.
+Proceed with local apps, test accounts or data, screenshots, and local logs. Obtain explicit authorization before the delegated run would use sensitive or production data, send an external message or form, make a purchase or booking, change a real account, delete data, modify system settings, close the user's apps, or perform broad cleanup. Put the approved boundary and the positive safe behavior in the prompt.

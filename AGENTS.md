@@ -11,8 +11,12 @@ Skills are organized by use:
 
 When changing the collection:
 
-- Use the globally installed `skill-creator` guidance to create or
-  substantially update a skill.
+- Use the globally installed `$writing-great-skills` guidance whenever writing,
+  reviewing, or improving a skill. Apply its invocation, information hierarchy,
+  completion-criterion, progressive-disclosure, and pruning standards before
+  validation.
+- Use the globally installed `skill-creator` workflow to scaffold a new skill or
+  manage resources and metadata during a substantial update.
 - Keep every skill in a lowercase, hyphenated folder whose name matches the
   `name` in `SKILL.md`.
 - Keep skill names unique across all categories; category folders do not

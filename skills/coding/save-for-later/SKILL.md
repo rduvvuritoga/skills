@@ -1,45 +1,49 @@
 ---
 name: save-for-later
-description: Save a planned feature or task as a GitHub issue for later implementation. Use when the user says "save this for later", "park this", "we'll do this later", or similar.
-user-invocable: true
-disable-model-invocation: true
-argument-hint: [optional title or description]
+description: Capture deferred implementation work as a durable GitHub issue. Use when the user asks to save, park, defer, or preserve a feature, plan, or technical task for later.
 allowed-tools: Bash Read Grep Glob
 ---
 
-Create a GitHub issue to capture a planned feature or task for later implementation.
+# Save for Later
 
-## Instructions
+Preserve enough current evidence and implementation intent that another agent can resume the work without reconstructing the conversation.
 
-1. If `$ARGUMENTS` is provided, use it as context for the issue. Otherwise, use the conversation context to determine what feature/task to save.
+## Workflow
 
-2. Gather all relevant details from the conversation:
-   - What was discussed and planned
-   - Implementation approach and steps
-   - Affected files and services
-   - Any trade-offs or considerations noted
+1. Resolve the target repository with `gh repo view`. If the project has no GitHub issue tracker, report that limitation and ask where the durable task should live.
 
-3. Create a well-structured GitHub issue using `gh issue create`:
-   - **Title**: Clear, concise summary (under 70 chars)
-   - **Label**: `enhancement` (unless the user specifies a different label)
-   - **Body**: Use this structure:
+2. Use `$ARGUMENTS` as the requested focus when present. Gather the rest from conversation and repository evidence:
 
-```
-## Summary
-Brief description of the feature/task.
+   - Problem or opportunity and why it is deferred.
+   - Current behavior and relevant files, symbols, services, or commands.
+   - Proposed implementation sequence.
+   - Decisions, trade-offs, dependencies, and blockers.
+   - Checkable acceptance criteria and validation commands.
 
-## Plan
-Detailed implementation steps with affected files.
+3. Inspect available labels with `gh label list --json name`. Use a user- or repository-specified label; otherwise use `enhancement` only when that label exists. Label absence must not block issue creation.
+
+4. Create the issue with `gh issue create` using a concise title and this body:
+
+```markdown
+## Problem
+What needs to change and why.
+
+## Current state
+Evidence from the repository, including affected paths and symbols.
+
+## Implementation plan
+Ordered steps with the expected files or services.
+
+## Acceptance criteria
+- [ ] Observable completion condition
+- [ ] Required validation
 
 ## Notes
-- Considerations, trade-offs, blockers
-- Any relevant context from the discussion
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Decisions, trade-offs, dependencies, and blockers.
 ```
 
-4. If the user or repository instructions name a GitHub Project, add the issue
-   to that project. Otherwise, leave it as a normal repository issue; do not
-   guess an organization, project number, or board.
+Add the issue to a GitHub Project only when the user or repository instructions identify the project. Preserve the normal repository issue otherwise.
 
-5. Return the issue URL to the user.
+5. Verify the created issue with `gh issue view <url> --json url,title,body,state`. Completion requires an open issue whose title, plan, evidence, and acceptance criteria match the deferred work.
+
+Return the verified issue URL and one sentence describing what was preserved.

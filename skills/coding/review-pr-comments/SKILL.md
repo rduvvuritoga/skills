@@ -1,169 +1,141 @@
 ---
 name: review-pr-comments
-description: End-to-end workflow for addressing PR review comments — fetch open threads, classify each, apply fixes, run type-check + tests, commit, push, and resolve the threads. Use when the user says "fix the review comments", "address the review", "fix and push", or after a PR review lands and they want one command to close it all out.
-user-invocable: true
-disable-model-invocation: true
-argument-hint: [optional PR number — defaults to PR for current branch]
+description: Address and close out GitHub pull-request review feedback. Use when the user asks to fix or address review comments, resolve review threads, or finish a review round with validated changes and verified GitHub resolution.
 allowed-tools: Bash Read Edit Write Grep Glob
 ---
 
-End-to-end review-comment workflow: fetch → classify → fix → test → commit → push → resolve.
+Address one round of pull-request feedback end to end: fetch → classify → fix when needed → validate → push → resolve → verify.
 
-## Instructions
+Completion means every thread that was open at the start is accounted for. In full-remediation mode, actionable fixes are validated and pushed before resolution. In resolution-only mode, addressed threads are confirmed resolved while unaddressed concerns stay open and are reported.
 
-### 1. Determine the PR
+## Workflow
 
-- If `$ARGUMENTS` is a number, use it.
-- Otherwise auto-detect:
-  ```bash
-  gh pr view --json number -q .number
-  ```
-- Determine repo (owner/name):
-  ```bash
-  gh repo view --json owner,name -q '.owner.login + "/" + .name'
-  ```
-- If the PR is closed/merged, stop and tell the user.
+### 1. Identify an open pull request
 
-### 2. Fetch open review threads
+Use `$ARGUMENTS` when it is a PR number; otherwise detect the PR for the current branch:
+
+```bash
+gh pr view --json number,state -q '.number, .state'
+gh repo view --json owner,name -q '.owner.login + "/" + .name'
+```
+
+Proceed once the owner, repository, PR number, and `OPEN` state are known. Report and stop when the PR cannot be found or is closed or merged.
+
+### 2. Fetch every open review thread
 
 ```bash
 gh api graphql -f query='
-query($owner: String!, $repo: String!, $pr: Int!) {
+query($owner: String!, $repo: String!, $pr: Int!, $after: String) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $pr) {
-      reviewThreads(first: 100) {
+      reviewThreads(first: 100, after: $after) {
         nodes {
           id isResolved path line
-          comments(first: 5) {
-            nodes { author { login } body }
+          comments(first: 100) {
+            nodes { author { login } body url }
           }
         }
+        pageInfo { hasNextPage endCursor }
       }
     }
   }
 }' -f owner=OWNER -f repo=REPO -F pr=PR_NUMBER
 ```
 
-Filter to `isResolved == false`. If zero open threads, tell the user "No open review threads on PR #N." and stop.
+Run the first request without `after`. While `hasNextPage` is true, repeat it with `-f after=END_CURSOR` and append the returned nodes. Filter the complete result to `isResolved == false`. If none remain, report `No open review threads on PR #N.` and stop.
 
-### 3. Classify each thread
+Create a ledger containing every open thread's id, path, line, concern, classification, and evidence. The ledger is the completion checklist for the run.
 
-For each open thread, decide one of:
+### 3. Classify every thread
 
-- **fix** — the concern is concrete, you understand it, and you can apply a focused fix. Examples: missing null check, unused import, `let foo;` → explicit type, missing `try/finally`.
-- **ask** — the comment needs human judgment (architectural disagreement, scope question, design preference, ambiguous "consider X").
-- **false-positive** — the reviewer is wrong (lazy-eval pattern flagged as TDZ, deduplicate of an already-fixed item, misreads the code).
-- **already-fixed** — earlier in this conversation or a recent commit on the branch already addresses it. Common when a reviewer re-runs after a previous round of fixes.
+Assign exactly one classification:
 
-Print a one-line summary per thread:
-```
-[FIX]   path:line — short description
-[ASK]   path:line — short description
-[FP]    path:line — short description (will reply + resolve)
-[DONE]  path:line — already addressed in <commit-sha or "earlier in this turn">
-```
+- **FIX** — a concrete concern that can be addressed with a focused change.
+- **ASK** — a decision that needs user judgment because scope, architecture, or intent is ambiguous.
+- **FALSE POSITIVE** — the concern does not apply; record the code or behavior that disproves it.
+- **ALREADY FIXED** — the branch already addresses it; record the commit or exact code evidence.
 
-### 4. Confirm scope (only if needed)
+Show one line per ledger entry:
 
-Skip if every thread is FIX/FP/DONE — proceed straight to fixes.
-
-If any are **ask**, present them via AskUserQuestion-style prose with options, and stop until the user answers. Do not silently skip them.
-
-If the user previously said "fix all of them" or "go ahead", trust that and don't ask again.
-
-### 5. Apply fixes
-
-For each FIX:
-1. Read the relevant file.
-2. Make the smallest change that addresses the concern.
-3. Move to the next.
-
-After all fixes are applied:
-- Run **type-check** — find the right command from the project. Common patterns: `pnpm type-check`, `pnpm tsc --noEmit`, `bun run type-check`, `npm run typecheck`. Look for project's `package.json` scripts or a `Makefile`.
-- Run **affected tests** — focus on tests near the changed files. If you added new tests, run them too. Don't rerun the entire suite unless the project is small.
-- If type-check or tests fail: STOP. Show the failures. Do not commit. Do not push.
-
-### 6. Commit
-
-One commit for the whole round of fixes. Title should match prior commits on the branch in style (look at `git log --oneline origin/main..HEAD` for the convention).
-
-Standard pattern:
-```
-fix: address <reviewer> review on PR #N
-
-- short bullet for each fix, naming the file/symbol
-- another bullet
-- (if false positives addressed) note them: "schema-ordering comments
-  are false positives — relations() callback evaluated lazily"
-
-Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
+```text
+[FIX]  path:line — concern
+[ASK]  path:line — decision needed
+[FP]   path:line — reason it does not apply
+[DONE] path:line — addressed by <commit or evidence>
 ```
 
-Use a HEREDOC for the commit message:
-```bash
-git commit -m "$(cat <<'EOF'
-<message>
-EOF
-)"
-```
+Every open thread must appear once. When any entry is `ASK`, present the decision with its options and wait for the user's answer before changing code.
 
-### 7. Push
+Choose the branch from the user's request:
 
-```bash
-git push
-```
+- **Full remediation** — continue to step 4 when the user wants review feedback addressed. Resolve `FIX` entries only after their changes are validated and pushed.
+- **Resolution only** — jump to step 6 when the user only wants addressed threads marked resolved. Resolve `FALSE POSITIVE` and `ALREADY FIXED` entries with recorded evidence; leave `FIX` and `ASK` entries open and report them.
 
-If the push fails (rejected, force-required, etc.), STOP and report. Don't retry with `--force` unless the user explicitly approves.
+### 4. Apply and validate focused fixes
 
-### 8. Resolve the threads
+For each `FIX`, read the surrounding code and repository instructions, then make the smallest change that addresses the recorded concern. Keep unrelated changes out of the patch.
 
-For each thread that was FIX, FP, or DONE:
+After all fixes:
 
-**If false-positive**, reply first with a brief explanation:
+1. Inspect the complete diff and account for every changed line against a ledger entry.
+2. Run the repository's required checks plus the affected tests for the changed behavior.
+3. Record the commands and results in the ledger.
+
+Proceed only when the relevant validation passes. On failure, report the command and output and leave the changes uncommitted and unpushed.
+
+### 5. Commit and push the validated round
+
+Match the repository's commit convention after inspecting recent commits. Use one focused commit for the review round unless repository instructions require a different structure.
+
+Before committing, confirm that only intended files are staged. Push normally. If the push is rejected or would require a force push, report the rejection and wait for explicit authorization.
+
+Completion for this step is a pushed commit SHA containing every `FIX` and no unrelated changes.
+
+### 6. Reply, resolve, and verify
+
+Reply to each `FALSE POSITIVE` before resolving it:
+
 ```bash
 gh api graphql -f query='
 mutation($threadId: ID!, $body: String!) {
-  addPullRequestReviewThreadReply(input: { pullRequestReviewThreadId: $threadId, body: $body }) {
-    comment { id }
-  }
-}' -f threadId=THREAD_ID -f body="Brief one-paragraph explanation."
+  addPullRequestReviewThreadReply(input: {
+    pullRequestReviewThreadId: $threadId,
+    body: $body
+  }) { comment { id url } }
+}' -f threadId=THREAD_ID -f body="Brief evidence-backed explanation."
 ```
 
-Then resolve. If you have many threads to resolve, use a Python loop — bash word-splitting is unreliable in zsh:
+Resolve each eligible entry: `FIX`, `FALSE POSITIVE`, and `ALREADY FIXED` after full remediation; `FALSE POSITIVE` and `ALREADY FIXED` in resolution-only mode.
+
 ```bash
-echo "$THREAD_IDS" | python3 -c "
-import sys, subprocess
-for tid in sys.stdin.read().split():
-    subprocess.run(['gh', 'api', 'graphql',
-        '-f', 'query=mutation(\$t: ID!) { resolveReviewThread(input: { threadId: \$t }) { thread { isResolved } } }',
-        '-f', f't={tid}'])
-"
+gh api graphql -f query='
+mutation($threadId: ID!) {
+  resolveReviewThread(input: { threadId: $threadId }) {
+    thread { id isResolved }
+  }
+}' -f threadId=THREAD_ID
 ```
 
-### 9. Report
+Repeat the query from step 2 after all mutations. Compare the result with the ledger and confirm:
 
-Print a tight summary the user can scan in 5 seconds:
-```
-Addressed N comments on PR #X (commit <sha>):
-  ✓ M fixes applied (file:line list, one per line)
-  ✓ K false positives explained + resolved
-  → A asked, awaiting your input  (only if applicable)
-Type-check: clean. Tests: <count> passed.
+- Every intended thread now has `isResolved == true`.
+- Every `ASK` or intentionally skipped thread remains open.
+- No thread disappeared from the accounting.
+
+Treat any mismatch or failed mutation as incomplete work: report the affected thread ids instead of claiming success.
+
+### 7. Report the verified outcome
+
+Return:
+
+```text
+Addressed N review threads on PR #X<optional: in commit-sha>:
+- M fixed, validated, pushed, and resolved
+- K false positives explained and resolved
+- D already-fixed threads verified and resolved
+- A questions left open: <path:line and reason>
+Validation: <commands and results>
 PR: <url>
 ```
 
-## Stop conditions
-
-- Type-check fails after fixes → don't commit, show errors.
-- Tests fail after fixes → don't commit, show failures.
-- Push rejected → don't force; show why.
-- A reviewer's comment is genuinely ambiguous → ask the user.
-- The PR diff would grow large enough that a single round of fixes feels risky (rough rule: >300 lines changed) → confirm with the user before committing.
-
-## Notes
-
-- Skip threads where `isResolved == true` — already done.
-- Skip threads where the latest comment is from the user themselves (no action needed).
-- Don't make drive-by changes outside the scope of the review comments — even if you spot something else.
-- If the project uses a heavy review pipeline (large test suites, linting that takes minutes), prefer to scope tests narrowly. The user can run the full suite separately.
-- The `/resolve-pr-comments` skill is a strict subset of step 8 — if the user only wants to mark things resolved without applying fixes, point them there.
+Include only categories that occurred. In resolution-only mode, omit commit and validation fields when no code changed. The resolved counts must come from the verification query, not from attempted mutations.

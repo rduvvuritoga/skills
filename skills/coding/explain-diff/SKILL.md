@@ -1,11 +1,9 @@
 ---
 name: explain-diff
-description: Create and manage a rich, self-contained HTML explanation of a code change, diff, commit range, branch, pull request, or reviewable patch. Use when the user asks to explain what changed, teach a PR, summarize a diff for onboarding, create an interactive walkthrough, produce a durable HTML artifact, or generate the post-commit explainer required by the implementation workflow.
+description: Create a durable, self-contained HTML walkthrough of a pull request, diff, branch, commit range, or patch. Use when the user wants an interactive explanation of a code change or the implementation workflow requires its post-commit explainer.
 ---
 
 # Explain Diff
-
-## Overview
 
 Create a dated HTML explainer that teaches a code change from first principles, then walks through the actual diff. The output should be useful to someone who wants to understand the system, not just skim the patch.
 
@@ -17,7 +15,7 @@ Create a dated HTML explainer that teaches a code change from first principles, 
 4. If a PR head file is missing or stale in the local checkout, read the PR diff or head-file content through the available GitHub/API/fetch path and note that limitation in the output.
 5. Build the explanation around four sections: `Background`, `Intuition`, `Code`, and `Quiz`.
 6. Write a single self-contained `.html` file under the repository root at `.scratch/explain-diff/YYYY-MM-DD-<slug>/index.html`. Resolve the repository exclude file with `git rev-parse --git-path info/exclude` and add `.scratch/` when needed so the local artifact never enters the change being explained.
-7. Verify the HTML source before returning: no external runtime dependencies, every eligible repository file path is linked to source, code blocks preserve whitespace, and quiz interactions work with embedded JavaScript.
+7. Open the rendered HTML and verify layout, responsive readability, source links, preserved code whitespace, and all quiz interactions. Source inspection alone is insufficient.
 8. Apply the lifecycle in [Cloudflare publication](references/cloudflare-publication.md).
 9. Return the local path or published URL and a concise note on what change was explained.
 
@@ -81,8 +79,6 @@ Always end with five interactive multiple-choice questions. The quiz is enabled 
 - Use callouts for key concepts, definitions, assumptions, and edge cases.
 - Style source links so they are visibly clickable and remain legible in code labels, tables, diagrams, and prose.
 - Use `<pre>` for code blocks. If a custom code container is used, its CSS must include `white-space: pre` or `white-space: pre-wrap`.
-- Before saving, scan every code block style in the HTML source and confirm whitespace is preserved.
-- Before saving a PR explainer, scan the rendered file-path labels and confirm every eligible repository file path is wrapped in a valid GitHub source anchor at the PR head SHA.
 - Do not depend on CDN CSS/JS, web fonts, network images, or repo-local assets unless the user explicitly asks.
 
 ## Writing Standard
@@ -93,15 +89,8 @@ Avoid shallow PR-summary language such as "this updates X" without explaining wh
 
 ## Artifact Lifecycle
 
-Keep the artifact local while its pull request is open. Never commit the artifact or include it in the diff it explains.
-
-- Keep open pull requests and unfinished diffs local.
-- Schedule a durable follow-up for an open pull request; publish only after it is merged.
-- Do not publish a closed-unmerged pull request unless the user explicitly identifies it as the finished result.
-- Publish the final commit of a completed no-PR implementation immediately.
-
-Read [Cloudflare publication](references/cloudflare-publication.md) for state detection, deferred automation, deployment naming, security checks, and cleanup.
+Read and apply [Cloudflare publication](references/cloudflare-publication.md). It is the single source of truth for deciding whether the artifact stays local, receives an open-PR follow-up, or is published and cleaned up.
 
 ## Final Response
 
-Return the `.scratch` path while work is open, or the verified Cloudflare URL after publication. Mention the source change explained, its pull-request state when applicable, and any limitations such as unavailable scheduling, missing Cloudflare configuration, unreadable files, or tests that were not run.
+Return the `.scratch` path while work is open, or the verified Cloudflare URL after publication. Mention the source change, pull-request state when applicable, successful rendered verification, and any concrete limitation.

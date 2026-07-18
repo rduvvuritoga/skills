@@ -2,3 +2,5 @@ interface:
   display_name: "Learn"
   short_description: "Coach focused learning in reusable modes"
   default_prompt: "Use $learn 80-20 building AI voice agents for service businesses."
+policy:
+  allow_implicit_invocation: false

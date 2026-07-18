@@ -1,6 +1,6 @@
 ---
 name: sync-personal-skills
-description: Manually sync Ravi's global personal coding-agent skills from the rduvvuritoga/skills repository. Use only when explicitly invoked with $sync-personal-skills or when the user directly asks to run the personal skills sync on demand.
+description: Sync Ravi's globally installed coding-agent skills from the rduvvuritoga/skills repository.
 user-invocable: true
 disable-model-invocation: true
 argument-hint: [optional --force]
@@ -9,37 +9,34 @@ allowed-tools: Bash
 
 # Sync Personal Skills
 
-Run the personal skills sync script from the source skills repository and report the result without editing, committing, or pushing the repository.
+Run the source repository's sync script while preserving the repository exactly as found.
 
 ## Workflow
 
-1. Work from `/Users/ravi/work/skills`.
+1. Work from `/Users/ravi/work/skills`. Capture `git status --short` before the run.
 
-2. Run:
+2. Select the command:
 
 ```bash
 /Users/ravi/work/skills/sync-skills
 ```
 
-If `$ARGUMENTS` is exactly `--force`, run:
+When `$ARGUMENTS` is exactly `--force`, use:
 
 ```bash
 /Users/ravi/work/skills/sync-skills --force
 ```
 
-Do not pass other arguments unless the user explicitly provides them.
+Treat any other argument as unsupported and report it without running the script.
 
-3. Treat the repository as read-only:
-   - Do not edit files.
-   - Do not commit.
-   - Do not push.
-   - Do not publish skills.
+3. The sync script is the only permitted repository operation. Preserve the source checkout: leave files, commits, branches, remotes, and publication state unchanged.
 
-4. Report the outcome concisely:
-   - If already current, say exactly that and include the SHA from the script output.
-   - If changes are installed, report the new SHA and installed skill count from the script output.
-   - If the script fails, report the exact blocker and the failing command.
+4. Capture `git status --short` again and compare it with the initial result. Report any unexpected repository change as a failed preservation check.
 
-## Notes
+5. Report the script outcome concisely:
 
-The sync script compares `rduvvuritoga/skills` main against the last installed SHA and only reinstalls when the remote changed.
+   - **Already current** — include the SHA from the script output.
+   - **Installed changes** — include the new SHA and installed skill count.
+   - **Failed** — include the failing command and exact blocker.
+
+Completion requires a successful script result and an unchanged source checkout. The script's reported SHA and count are authoritative; do not infer them from local files.

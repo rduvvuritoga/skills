@@ -31,19 +31,21 @@ npx skills update --global --yes
 Model-invoked skills are available automatically when a request matches.
 User-invoked skills run only when explicitly selected.
 
+See [`index.md`](./index.md) for detailed descriptions, use cases, outputs, and
+invocation syntax for every skill.
+
 ### Coding
 
 **Model-invoked**
 
 - [`codex-computer-use`](./skills/coding/codex-computer-use/SKILL.md) — Delegate local UI and runtime verification to Codex CLI.
-- [`error-modals`](./skills/coding/error-modals/SKILL.md) — Design and implement actionable error dialogs, messages, and recovery paths.
+- [`error-modals`](./skills/coding/error-modals/SKILL.md) — Design actionable error states, recovery messages, and dialogs.
 - [`explain-diff`](./skills/coding/explain-diff/SKILL.md) — Create a self-contained HTML walkthrough of a code change.
+- [`review-pr-comments`](./skills/coding/review-pr-comments/SKILL.md) — Fix or close out pull-request feedback with verified resolution.
+- [`save-for-later`](./skills/coding/save-for-later/SKILL.md) — Preserve deferred work as a detailed GitHub issue.
 
 **User-invoked**
 
-- [`resolve-pr-comments`](./skills/coding/resolve-pr-comments/SKILL.md) — Resolve review threads after their concerns have been addressed.
-- [`review-pr-comments`](./skills/coding/review-pr-comments/SKILL.md) — Fix, validate, push, and resolve pull-request feedback.
-- [`save-for-later`](./skills/coding/save-for-later/SKILL.md) — Preserve deferred work as a detailed GitHub issue.
 - [`setup-lanes`](./skills/coding/setup-lanes/SKILL.md) — Create stacked branches for parallel-agent feature work.
 - [`sync-personal-skills`](./skills/coding/sync-personal-skills/SKILL.md) — Manually sync Ravi's global skills.
 
@@ -55,7 +57,7 @@ User-invoked skills run only when explicitly selected.
 
 ### Learning
 
-**Model-invoked**
+**User-invoked**
 
 - [`learn`](./skills/learning/learn/SKILL.md) — Coach a topic through structured learning modes.
 
@@ -106,8 +108,8 @@ git clone https://github.com/rduvvuritoga/skills.git
 cd skills
 ```
 
-Create, validate, commit, and push normally. Ravi's Mac checks GitHub hourly
-and installs a newer `main` automatically.
+Create, validate, commit, and push normally. On Ravi's Mac, run
+`./sync-skills` or invoke `$sync-personal-skills` to install the newer `main`.
 
 ## Sync this computer
 

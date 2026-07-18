@@ -1,127 +1,100 @@
 ---
 name: setup-lanes
-description: Set up stacked lane branches off a feature integration branch so multiple agents can work the same feature in parallel from separate Conductor workspaces. Use when asked to "set up lanes", "create lane branches", "stack branches for parallel agents", or splitting a feature across multiple workspaces.
+description: Create an integration branch and aligned lane branches for parallel-agent feature work.
 user-invocable: true
 disable-model-invocation: true
 argument-hint: <feature-name> [lane1 lane2 ...]
 allowed-tools: Bash Read Write AskUserQuestion
 ---
 
-Set up the stacked-branch structure for parallel-agent work on a feature.
+# Setup Lanes
 
-Target structure:
+Create a shared integration baseline and one branch per parallel work lane:
 
-```
+```text
 main
-└── <feature>                ← integration branch (single PR target → main)
-    ├── <feature>-lane-a     ← agent 1 workspace
-    ├── <feature>-lane-b     ← agent 2 workspace
-    └── <feature>-lane-c     ← agent 3 workspace
+└── <feature>
+    ├── <feature>-<lane-1>
+    ├── <feature>-<lane-2>
+    └── <feature>-<lane-3>
 ```
 
-## Why this pattern
+Completion means every newly created lane points to the verified integration commit, existing branches remain untouched, and the user receives the exact PR and diff baselines.
 
-- Each agent works in its own Conductor workspace with a narrow scope.
-- Lane branches all start from the same `<feature>` baseline, not from `main`, so they share any feature-level scaffolding (design docs, schema, shared types) that already lives on `<feature>`.
-- Lanes merge into `<feature>` first; conflicts are resolved once. Only one PR (`<feature> → main`) lands the whole feature.
+## Workflow
 
-## Instructions
+### 1. Resolve names
 
-### 1. Resolve inputs
+Read `<feature-name>` and optional lane names from `$ARGUMENTS`. Use lowercase kebab-case. When lanes are omitted, use `lane-a`, `lane-b`, and `lane-c`.
 
-From `$ARGUMENTS` or by asking:
+Construct `<feature>-<lane>` for each lane and show the proposed names before any remote write when the input was inferred or normalized.
 
-- `<feature-name>` — kebab-case, e.g. `preview-mode`. Used as the integration-branch name.
-- Lane names — pick one shape:
-  - **Generic**: `lane-a`, `lane-b`, `lane-c` — good when scope is documented in the design doc.
-  - **Descriptive**: `ui`, `api`, `email` — good when the lane name *is* the scope.
-  - Default to 3 generic lanes (`lane-a`, `lane-b`, `lane-c`) if the user doesn't specify.
+### 2. Inspect repository state
 
-### 2. Pre-flight
+Run:
 
 ```bash
+git status --short --branch
+git remote get-url origin
 git fetch origin --prune
+git rev-parse --verify origin/main
+git for-each-ref --format='%(refname:short) %(objectname)' refs/heads refs/remotes/origin
 ```
 
-If `origin/<feature>` doesn't exist, create it from `origin/main` and push:
+Proceed once `origin`, `origin/main`, and the local working state are known. Preserve uncommitted work; branch creation must not switch branches or alter tracked files.
+
+### 3. Establish the integration branch
+
+Inspect local and remote `<feature>` refs separately.
+
+- When `origin/<feature>` exists, use its commit as the baseline and leave it unchanged.
+- When neither ref exists, create `<feature>` from `origin/main` and push it with upstream tracking.
+- When only a local `<feature>` exists, report its commit and ask before publishing or replacing it.
 
 ```bash
 git branch <feature> origin/main
 git push -u origin <feature>
 ```
 
-If `origin/<feature>` already exists, leave it alone — that's the integration branch and may already have feature-level commits on it.
+Record the full baseline commit with `git rev-parse origin/<feature>` before creating lanes.
 
-### 3. Create each lane branch from `origin/<feature>`
+### 4. Create only missing lanes
 
-For each lane, branch from `origin/<feature>` (not from `HEAD`, not from `main`):
+For every proposed lane, inspect both `refs/heads/<feature>-<lane>` and `refs/remotes/origin/<feature>-<lane>`.
+
+- Leave an existing lane untouched and record whether it matches the baseline.
+- Create a lane only when neither local nor remote ref exists.
 
 ```bash
 git branch <feature>-<lane> origin/<feature>
+git push -u origin <feature>-<lane>
 ```
 
-Skip any lane that already exists at origin (idempotent re-run):
+Never reset, force-update, or overwrite an existing branch as part of setup.
+
+### 5. Verify exact alignment
+
+Fetch again, then compare each newly created local and remote lane with the recorded integration commit:
 
 ```bash
-git ls-remote --exit-code --heads origin "<feature>-<lane>" >/dev/null 2>&1 && echo "already exists, skipping"
+git fetch origin --prune
+git rev-parse origin/<feature>
+git rev-parse <feature>-<lane>
+git rev-parse origin/<feature>-<lane>
 ```
 
-Push them all with upstream tracking:
+Each newly created ref must equal the recorded baseline. Report existing lanes that differ; they are outside automatic repair.
 
-```bash
-git push -u origin <feature>-<lane1> <feature>-<lane2> <feature>-<lane3>
-```
+### 6. Return the workspace plan
 
-### 4. Verify alignment
+Report:
 
-All lane branches must point at the same commit as `origin/<feature>`:
+- The branch tree with exact names and baseline SHA.
+- Which branches were created and which already existed.
+- Any existing lane that differs from the integration baseline.
+- One workspace per lane.
+- Lane PR base: `<feature>`.
+- Lane diff baseline: `git diff origin/<feature>...`.
+- Final integration PR base: `main`.
 
-```bash
-git for-each-ref --format='%(refname:short) %(objectname:short)' \
-  refs/heads/<feature>* refs/remotes/origin/<feature>*
-```
-
-If a lane branch already existed locally and drifted, ask the user before doing `git reset --hard origin/<lane>` — that's destructive and should be confirmed.
-
-### 5. If running inside one of the lane workspaces
-
-If the current workspace's branch matches a lane that just got created (e.g. you're already on `<feature>-lane-a`), offer to hard-reset it to `origin/<feature>` to guarantee a clean baseline. Confirm first if the working tree has any local commits or uncommitted changes.
-
-### 6. Output the workspace plan
-
-Print:
-
-- The branch tree with real names filled in.
-- Suggested lane → workspace mapping (one Conductor workspace per lane).
-- The PR-target reminder: each lane PR uses `gh pr create --base <feature>`, not `main`.
-- Diff baseline reminder: `git diff origin/<feature>...` (not `origin/main`).
-
-## Lane hygiene rules (give each agent these)
-
-- **Stay in scope.** If you need to touch a file outside the lane's assigned scope, surface it — don't silently edit.
-- **No drive-bys.** No unrelated refactors, renames, or repo-wide formatting.
-- **Shared types are shared.** If a lane must change a type used by another lane, post the change to the user first so the other lane can rebase.
-- **PR target is `<feature>`, not `main`.**
-- **After a sibling lane merges into `<feature>`**, rebase the still-open lanes onto the new `<feature>` tip:
-  ```bash
-  git fetch origin
-  git rebase origin/<feature>
-  ```
-
-## Merging back
-
-When all lanes are merged into `<feature>`:
-
-```bash
-git checkout <feature> && git pull
-pnpm install && pnpm lint && pnpm typecheck && pnpm test && pnpm build
-git push origin <feature>
-gh pr create --base main --head <feature>
-```
-
-## Failure modes to flag
-
-- **Integration branch is far ahead of `main`.** Surface this — the user may want to rebase `<feature>` onto `main` first so lanes start from a fresher base.
-- **A lane branch already exists with commits on it.** Don't overwrite. Tell the user; let them decide rename vs. reset vs. reuse.
-- **`<feature>` is checked out in another workspace.** Branch creation from `origin/<feature>` doesn't touch the other workspace's checkout — note it so the user knows.
-- **No remote `origin/main` reference.** Run `git fetch origin main` first; abort with a clear message if the remote is missing.
+Stop after setup and verification. Merging, rebasing, and running the repository's release checks belong to the later integration workflow.
