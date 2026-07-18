@@ -45,6 +45,7 @@ User-invoked skills run only when explicitly selected.
 - [`review-pr-comments`](./skills/coding/review-pr-comments/SKILL.md) — Fix, validate, push, and resolve pull-request feedback.
 - [`save-for-later`](./skills/coding/save-for-later/SKILL.md) — Preserve deferred work as a detailed GitHub issue.
 - [`setup-lanes`](./skills/coding/setup-lanes/SKILL.md) — Create stacked branches for parallel-agent feature work.
+- [`sync-personal-skills`](./skills/coding/sync-personal-skills/SKILL.md) — Manually sync Ravi's global skills.
 
 ### Writing and marketing
 
