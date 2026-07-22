@@ -60,6 +60,12 @@ invocation syntax for every skill.
 
 - [`learn`](./skills/learning/learn/SKILL.md) — Coach a topic through structured learning modes.
 
+### Personal
+
+**Model-invoked**
+
+- [`team-lunch`](./skills/personal/team-lunch/SKILL.md) — Order team lunch on DoorDash end to end with dd-cli.
+
 ## Create a skill
 
 Clone this repository once and reuse that checkout. On Ravi's Mac, it lives at:

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Lunch"
+  short_description: "Order team lunch on DoorDash with dd-cli"
+  default_prompt: "Use $team-lunch to order lunch for the team on DoorDash."

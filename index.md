@@ -82,3 +82,13 @@ Coaches one topic through a selected structured mode. Available modes are:
 - `bridge` — transfer from a familiar topic to a new one.
 
 Static modes return their complete artifact and a way to test understanding. Interactive modes stop at the learner's next action and continue from the response in a later turn.
+
+## Personal
+
+### `team-lunch`
+
+[Source](./skills/personal/team-lunch/SKILL.md) · Model-invoked
+
+Takes a team food order end to end with `dd-cli` and places it on DoorDash. It gathers the brief (headcount, cuisine, dietary needs, budget, delivery address, and deadline), confirms which saved address is the office, searches for restaurants the CLI can actually check out, and builds a spread sized for the group that covers every diet.
+
+It previews pricing with work benefits enabled — surfacing any eligible company budget for the user to apply — then confirms the total, Dasher tip, and payment method before submitting, or hands off a browser checkout URL when the user prefers to finish there.
