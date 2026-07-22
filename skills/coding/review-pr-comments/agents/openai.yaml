@@ -1,4 +1,0 @@
-interface:
-  display_name: "Review PR Comments"
-  short_description: "Address or resolve GitHub PR feedback"
-  default_prompt: "Use $review-pr-comments to address or close out the review threads on the current pull request."

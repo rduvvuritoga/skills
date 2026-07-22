@@ -41,7 +41,6 @@ invocation syntax for every skill.
 - [`codex-computer-use`](./skills/coding/codex-computer-use/SKILL.md) — Delegate local UI and runtime verification to Codex CLI.
 - [`error-modals`](./skills/coding/error-modals/SKILL.md) — Design actionable error states, recovery messages, and dialogs.
 - [`explain-diff`](./skills/coding/explain-diff/SKILL.md) — Create a self-contained HTML walkthrough of a code change.
-- [`review-pr-comments`](./skills/coding/review-pr-comments/SKILL.md) — Fix or close out pull-request feedback with verified resolution.
 - [`save-for-later`](./skills/coding/save-for-later/SKILL.md) — Preserve deferred work as a detailed GitHub issue.
 
 **User-invoked**

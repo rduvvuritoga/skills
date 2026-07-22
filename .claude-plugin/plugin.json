@@ -1,6 +1,6 @@
 {
   "name": "rduvvuri-skills",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Rduvvuri's reusable coding-agent skills.",
   "author": {
     "name": "Ravi Duvvuri"
@@ -10,7 +10,6 @@
     "./skills/coding/codex-computer-use",
     "./skills/coding/error-modals",
     "./skills/coding/explain-diff",
-    "./skills/coding/review-pr-comments",
     "./skills/coding/save-for-later",
     "./skills/coding/setup-lanes",
     "./skills/coding/sync-personal-skills",

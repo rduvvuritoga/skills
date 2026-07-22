@@ -29,14 +29,6 @@ Creates a dated, self-contained HTML walkthrough of a pull request, branch, comm
 
 It verifies the rendered artifact, links repository paths to the exact GitHub revision, keeps work-in-progress explainers local, and applies the configured Cloudflare publication lifecycle after completion.
 
-### `review-pr-comments`
-
-[Source](./skills/coding/review-pr-comments/SKILL.md) · Model-invoked
-
-Handles a complete round of GitHub pull-request feedback. It paginates every open thread, classifies each concern, applies focused fixes when requested, runs relevant validation, commits and pushes the result, replies to false positives, resolves eligible threads, and re-queries GitHub to verify the final state.
-
-It also supports a resolution-only branch for comments that have already been addressed, while leaving unresolved concerns and questions open and explicitly reported.
-
 ### `save-for-later`
 
 [Source](./skills/coding/save-for-later/SKILL.md) · Model-invoked
